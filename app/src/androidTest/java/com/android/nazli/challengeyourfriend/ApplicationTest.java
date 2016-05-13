@@ -1,4 +1,4 @@
-package com.example.android.csula.challengefriends;
+package com.android.nazli.challengeyourfriend;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
