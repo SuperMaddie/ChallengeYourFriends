@@ -4,6 +4,10 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
 
+    repositories {
+        mavenCentral()
+    }
+
     defaultConfig {
         applicationId "com.example.android.csula.challengefriends"
         minSdkVersion 15
@@ -19,6 +23,7 @@ android {
     }
 }
 
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
@@ -28,4 +33,5 @@ dependencies {
     compile files('libs/aws-android-sdk-core-2.2.16.jar')
     compile files('libs/aws-android-sdk-ddb-2.2.16.jar')
     compile files('libs/aws-android-sdk-ddb-mapper-2.2.16.jar')
+    compile 'com.facebook.android:facebook-android-sdk:[4,5)'
 }

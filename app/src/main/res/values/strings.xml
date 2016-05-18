@@ -1,4 +1,13 @@
 <resources>
+    <string name="facebook_app_id">2030893120469567</string>
+    <string name="fb_login_protocol_scheme">fb2030893120469567</string>
+
     <string name="app_name">ChallengeFriends</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_login">Login</string>
+
+    <string name="user_token_key">USER_TOKEN</string>
+    <string name="user_identity_id">USER_ID</string>
+    <string name="action_logout">Logout</string>
+    <string name="user_prefs_key">user_preferences</string>
 </resources>

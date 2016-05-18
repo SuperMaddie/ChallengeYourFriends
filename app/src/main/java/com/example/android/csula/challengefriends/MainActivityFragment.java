@@ -1,82 +1,86 @@
 package com.example.android.csula.challengefriends;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
 
-    private final int MY_PERMISSION_REQUEST_READ_SMS = 1;
 
     public MainActivityFragment() {
-        new AWSCognitoTask().execute();
     }
 
-/*    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSION_REQUEST_READ_SMS : {
-                if(grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    *//* permission was granted *//*
-                }else {
-                    *//* permission was denied *//*
-                }
-            }
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id == R.id.action_logout){
+            logout();
+            return true;
         }
-    }*/
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void logout() {
+        //LoginManager.getInstance().logOut();
+        setSharedValues(getString(R.string.user_token_key), null, getActivity());
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        startActivity(intent);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_main, container, false);
-    }
+        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-    public class AWSCognitoTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            /* Initialize the Amazon Cognito credentials provider */
-            CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
-                    getContext(),
-                    "us-east-1:764851a6-88d3-4ec3-932f-fa716472f6f8", // Identity Pool ID
-                    Regions.US_EAST_1 // Region
-            );
+        /*CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
+                getContext(),
+                "us-east-1:764851a6-88d3-4ec3-932f-fa716472f6f8", // Identity Pool ID
+                Regions.US_EAST_1 // Region
+        );
 
-            /* add user id to shared preference */
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            prefs.edit().putString("USER_ID", credentialsProvider.getIdentityId()).commit();
+        final String userId = credentialsProvider.getIdentityId();*/
 
+        final String userToken = getSharedValues(getString(R.string.user_token_key), getActivity());
 
-            /* add user info to dynamoDB */
-            User user = new User(credentialsProvider.getIdentityId(), "11111111");
-            /*Map<String, AttributeValue> info = new HashMap<>();
-            AttributeValue attributeValue = new AttributeValue();
-            attributeValue.setS(credentialsProvider.getIdentityId());
-            info.put("user_id", attributeValue);
-            attributeValue = new AttributeValue();
-            //attributeValue.setS(((TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE)).getLine1Number().toString());
-            attributeValue.setS("Phone Number");
-            info.put("phone_number", attributeValue);*/
-
-            AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
-            DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
-            mapper.save(user);
-
-            return null;
+        if(userToken == null) {
+            /* redirect user to login */
+            //startLoginActivity();
         }
+        return rootView;
     }
+
+    public void startLoginActivity(){
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        startActivity(intent);
+    }
+
+    public void setSharedValues(String key, String value, Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(key, value);
+        editor.commit();
+    }
+
+    public String getSharedValues(String key, Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(key, null);
+    }
+
 }
