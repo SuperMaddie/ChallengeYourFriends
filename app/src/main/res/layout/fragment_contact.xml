@@ -9,7 +9,7 @@
     tools:context="com.android.nazli.challengeyourfriend.ContactActivityFragment"
     tools:showIn="@layout/activity_contact">
     <ListView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/listContact"
+        android:id="@+id/listview_contacts"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
