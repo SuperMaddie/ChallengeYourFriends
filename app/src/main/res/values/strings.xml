@@ -10,4 +10,5 @@
     <string name="user_identity_id">USER_ID</string>
     <string name="action_logout">Logout</string>
     <string name="user_prefs_key">user_preferences</string>
+    <string name="title_activity_contact">ContactActivity</string>
 </resources>

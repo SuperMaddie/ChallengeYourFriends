@@ -11,13 +11,17 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import java.util.Arrays;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
-
-
+    ArrayAdapter<String> challengeArrayAdapter;
     public MainActivityFragment() {
     }
 
@@ -56,6 +60,22 @@ public class MainActivityFragment extends Fragment {
         );
 
         final String userId = credentialsProvider.getIdentityId();*/
+            String[] mockData = {"challenge1", "challenge1", "challenge1", "challenge1", "challenge1"};
+            challengeArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.listview_tem_challenge, R.id.textview_challenge_item, Arrays.asList(mockData));
+
+        ListView listView = (ListView)rootView.findViewById(R.id.listview_challenges);
+        listView.setAdapter(challengeArrayAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String challenge = challengeArrayAdapter.getItem(position);
+
+                Intent intent = new Intent(getActivity(), ContactActivity.class);
+                startActivity(intent);
+
+                //Toast.makeText(getActivity(), challenge, Toast.LENGTH_SHORT).show();
+            }
+        });
 
         final String userToken = getSharedValues(getString(R.string.user_token_key), getActivity());
 
