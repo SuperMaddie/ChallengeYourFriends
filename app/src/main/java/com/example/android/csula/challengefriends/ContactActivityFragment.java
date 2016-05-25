@@ -35,36 +35,9 @@ public class ContactActivityFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_contact, container, false);
         contactsListView = (ListView) rootView.findViewById(R.id.listview_contacts);
-        displayContacts();
+        showContacts();
 
         return rootView;
-    }
-
-    public void displayContacts() {
-        /*try {
-            while (cursor.moveToNext()) {
-                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-
-                //String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                Log.e("name and phone:", name);
-
-                String[] from = new String[]{
-                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                        ContactsContract.CommonDataKinds.Phone.NUMBER
-                };
-                int[] to = {android.R.id.text1};
-                ListAdapter contactAdapter = new SimpleCursorAdapter(
-                        getActivity(),
-                        android.R.layout.simple_list_item_1,
-                        cursor,
-                        from,
-                        to,
-                        0);
-                contactsListView.setAdapter(contactAdapter);
-            }*/
-
-        showContacts();
     }
 
     private void showContacts() {

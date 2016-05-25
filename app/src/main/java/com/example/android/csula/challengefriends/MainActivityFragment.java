@@ -7,11 +7,13 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -22,6 +24,9 @@ import java.util.Arrays;
  */
 public class MainActivityFragment extends Fragment {
     ArrayAdapter<String> challengeArrayAdapter;
+    private static View rootView;
+    private static ViewPager pager;
+
     public MainActivityFragment() {
     }
 
@@ -51,7 +56,7 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         /*CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                 getContext(),
@@ -60,10 +65,13 @@ public class MainActivityFragment extends Fragment {
         );
 
         final String userId = credentialsProvider.getIdentityId();*/
-            String[] mockData = {"challenge1", "challenge1", "challenge1", "challenge1", "challenge1"};
-            challengeArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.listview_tem_challenge, R.id.textview_challenge_item, Arrays.asList(mockData));
+        //String[] mockData = {"challenge1", "challenge1", "challenge1", "challenge1", "challenge1"};
+        //challengeArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.listview_tem_challenge, R.id.textview_challenge_item, Arrays.asList(mockData));
 
-        ListView listView = (ListView)rootView.findViewById(R.id.listview_challenges);
+        pager = (ViewPager)rootView.findViewById(R.id.viewpager_main);
+        pager.setAdapter(new MyPagerAdapter(getActivity().getSupportFragmentManager()));
+
+        /*ListView listView = (ListView)rootView.findViewById(R.id.listview_challenges);
         listView.setAdapter(challengeArrayAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -75,7 +83,7 @@ public class MainActivityFragment extends Fragment {
 
                 //Toast.makeText(getActivity(), challenge, Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
 
         final String userToken = getSharedValues(getString(R.string.user_token_key), getActivity());
 
@@ -103,4 +111,82 @@ public class MainActivityFragment extends Fragment {
         return prefs.getString(key, null);
     }
 
+    /*----------------View Pager Custom Adapter----------------*/
+    private class MyPagerAdapter extends FragmentPagerAdapter {
+        public MyPagerAdapter(FragmentManager fragmentManager) {
+            super(fragmentManager);
+        }
+
+        @Override
+        public Fragment getItem(int pos) {
+            SubFragment subFragment = new SubFragment();
+            subFragment.setPosition(pos);
+            subFragment.setContext(getActivity());
+
+            switch(pos){
+                case 0:
+                    String[] mockData = {"challenge1", "challenge2", "challenge3", "challenge4", "challenge5"};
+                    subFragment.setAdapterData(mockData);
+                    break;
+                case 1:
+                    String[] mockData2 = {"rchallenge1", "rchallenge2", "rchallenge3", "rchallenge4", "rchallenge5"};
+                    subFragment.setAdapterData(mockData2);
+                    break;
+            }
+
+            return subFragment;
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            CharSequence result = "";
+            switch (position) {
+                case 0:
+                    result =  "List Of Challenges";
+                    break;
+                case 1:
+                    result =  "Recieved Challenges";
+                    break;
+            }
+            return  result;
+        }
+    }
+
+    public static class SubFragment extends Fragment {
+        private int position;
+        private ArrayAdapter adapter;
+        private Context context;
+
+        public SubFragment(){}
+
+        public void setContext(Context context) {this.context = context;}
+
+        public void setPosition(int position) {
+            this.position = position;
+        }
+
+        public void setAdapterData(String[] mockData) {
+            ArrayAdapter<String> ad2 = new ArrayAdapter<String>(context, R.layout.listview_item_challenge,
+                    R.id.textview_challenge_item, Arrays.asList(mockData));
+            adapter = ad2;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            rootView = inflater.inflate(R.layout.sub_fragment_layout, container, false);
+
+            ListView listView = (ListView) rootView.findViewById(R.id.listview_sub_fragment);
+            listView.setItemsCanFocus(true);
+
+            listView.setAdapter(adapter);
+
+            return rootView;
+        }
+    }
+    /*----------------------------------------------------------*/
 }

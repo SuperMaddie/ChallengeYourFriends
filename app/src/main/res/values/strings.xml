@@ -11,4 +11,5 @@
     <string name="action_logout">Logout</string>
     <string name="user_prefs_key">user_preferences</string>
     <string name="title_activity_contact">ContactActivity</string>
+    <string name="title_activity_view_pager">ViewPagerActivity</string>
 </resources>
