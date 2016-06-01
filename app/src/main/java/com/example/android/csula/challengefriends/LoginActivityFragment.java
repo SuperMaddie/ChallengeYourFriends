@@ -1,19 +1,18 @@
 package com.example.android.csula.challengefriends;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.regions.Regions;
+import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
@@ -49,6 +48,7 @@ public class LoginActivityFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
         callbackManager = CallbackManager.Factory.create();
         tokenTracker = new AccessTokenTracker() {
@@ -87,11 +87,11 @@ public class LoginActivityFragment extends Fragment {
             public void onSuccess(LoginResult loginResult) {
 
                 String token = AccessToken.getCurrentAccessToken().getToken();
-                /* save token in shared values */
-                setSharedValues(getString(R.string.user_token_key), token, getActivity());
+                /* save token and user in shared values */
+                PreferenceUtils.setSharedValues(getString(R.string.user_token_key), token, getActivity());
 
-                /*AWSCognitoTask awsCognitoTask = new AWSCognitoTask();
-                awsCognitoTask.execute();*/
+                AWSCognitoTask awsCognitoTask = new AWSCognitoTask();
+                awsCognitoTask.execute();
                 /* go back to main activity */
                 getActivity().finish();
 
@@ -144,8 +144,10 @@ public class LoginActivityFragment extends Fragment {
             logins.put("graph.facebook.com", token);
             credentialsProvider.setLogins(logins);
 
+            Log.e("identity id", credentialsProvider.getIdentityId());
+
             /* add user identity to shared preference */
-            setSharedValues(getString(R.string.user_identity_id), credentialsProvider.getIdentityId(), getActivity());
+            //PreferenceUtils.setSharedValues(getString(R.string.user_identity_id), credentialsProvider.getIdentityId(), mContext);
 
             /* add user info to dynamoDB */
             //User user = new User(credentialsProvider.getIdentityId(), "11111111");
@@ -180,17 +182,4 @@ public class LoginActivityFragment extends Fragment {
             }
         }
     }*/
-
-    public void setSharedValues(String key, String value, Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(key, value);
-        editor.commit();
-    }
-
-    public String getSharedValues(String key, Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(key, null);
-    }
-
 }

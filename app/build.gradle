@@ -21,6 +21,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    buildTypes.each {
+        it.buildConfigField 'String', 'GCM_SERVER_KEY', GCMServerKey
+    }
+
+    buildTypes.each {
+        it.buildConfigField 'String', 'GCM_API_KEY', GCMAPIKey
+    }
+
+    buildTypes.each {
+        it.buildConfigField 'String', 'PROJECT_NUMBER', ProjectNumber
+    }
 }
 
 
@@ -34,4 +46,5 @@ dependencies {
     compile files('libs/aws-android-sdk-ddb-2.2.16.jar')
     compile files('libs/aws-android-sdk-ddb-mapper-2.2.16.jar')
     compile 'com.facebook.android:facebook-android-sdk:[4,5)'
+    compile 'com.google.android.gms:play-services-gcm:8.4.0'
 }

@@ -1,17 +1,17 @@
 package com.example.android.csula.challengefriends.models;
 
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBAttribute;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBHashKey;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBTable;
+
+import java.io.Serializable;
 
 /**
  * Created by Mahdiye on 5/10/2016.
  */
 @DynamoDBTable(tableName = "users")
-public class User {
+public class User implements Serializable{
 
     private String id;
-    private String phoneNumber;
     private String name;
     private String email;
     private String faceBookId;
@@ -19,9 +19,8 @@ public class User {
 
     public User(){}
 
-    public User(String id, String phoneNumber, String name, String email, String faceBookId, String gender) {
+    public User(String id, String name, String email, String faceBookId, String gender) {
         this.id = id;
-        this.phoneNumber = phoneNumber;
         this.name = name;
         this.email = email;
         this.faceBookId = faceBookId;
@@ -35,15 +34,6 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    @DynamoDBAttribute(attributeName = "phone_number")
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
     }
 
     public String getName() {

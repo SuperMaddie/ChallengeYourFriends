@@ -2,9 +2,7 @@ package com.example.android.csula.challengefriends;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -17,13 +15,11 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.example.android.csula.challengefriends.utils.PreferenceUtils;
+
 import java.util.Arrays;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class MainActivityFragment extends Fragment {
-    ArrayAdapter<String> challengeArrayAdapter;
     private static View rootView;
     private static ViewPager pager;
 
@@ -48,7 +44,7 @@ public class MainActivityFragment extends Fragment {
 
     public void logout() {
         //LoginManager.getInstance().logOut();
-        setSharedValues(getString(R.string.user_token_key), null, getActivity());
+        PreferenceUtils.setSharedValues(getString(R.string.user_token_key), null, getActivity());
         Intent intent = new Intent(getActivity(), MainActivity.class);
         startActivity(intent);
     }
@@ -56,6 +52,14 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        final String userToken = PreferenceUtils.getSharedValues(getString(R.string.user_token_key), getActivity());
+
+        if(userToken == null) {
+            /* redirect user to login */
+            startLoginActivity();
+        }
+
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         /*CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
@@ -65,8 +69,6 @@ public class MainActivityFragment extends Fragment {
         );
 
         final String userId = credentialsProvider.getIdentityId();*/
-        //String[] mockData = {"challenge1", "challenge1", "challenge1", "challenge1", "challenge1"};
-        //challengeArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.listview_tem_challenge, R.id.textview_challenge_item, Arrays.asList(mockData));
 
         pager = (ViewPager)rootView.findViewById(R.id.viewpager_main);
         pager.setAdapter(new MyPagerAdapter(getActivity().getSupportFragmentManager()));
@@ -85,30 +87,12 @@ public class MainActivityFragment extends Fragment {
             }
         });*/
 
-        final String userToken = getSharedValues(getString(R.string.user_token_key), getActivity());
-
-        if(userToken == null) {
-            /* redirect user to login */
-            //startLoginActivity();
-        }
         return rootView;
     }
 
     public void startLoginActivity(){
         Intent intent = new Intent(getActivity(), LoginActivity.class);
         startActivity(intent);
-    }
-
-    public void setSharedValues(String key, String value, Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(key, value);
-        editor.commit();
-    }
-
-    public String getSharedValues(String key, Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(key, null);
     }
 
     /*----------------View Pager Custom Adapter----------------*/
