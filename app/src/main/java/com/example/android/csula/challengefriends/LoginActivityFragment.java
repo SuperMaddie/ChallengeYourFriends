@@ -24,6 +24,7 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -79,19 +80,39 @@ public class LoginActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
-        loginButton.setReadPermissions("email");
+        String[] permissions = {"id", "email", "user_friends"};
+        loginButton.setReadPermissions(Arrays.asList("user_friends"));
+        loginButton.setReadPermissions(Arrays.asList("id"));
+        loginButton.setReadPermissions(Arrays.asList("email"));
         loginButton.setFragment(this);
 
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
 
-                String token = AccessToken.getCurrentAccessToken().getToken();
+                AccessToken accessToken = AccessToken.getCurrentAccessToken();
                 /* save token and user in shared values */
-                PreferenceUtils.setSharedValues(getString(R.string.user_token_key), token, getActivity());
+                PreferenceUtils.setSharedValues(getString(R.string.user_token_key), accessToken.getToken(), getActivity());
 
                 AWSCognitoTask awsCognitoTask = new AWSCognitoTask();
                 awsCognitoTask.execute();
+
+                /* get fb friends, save in preferences */
+                String id = AccessToken.getCurrentAccessToken().getUserId();
+                Log.e("id", id);
+
+                /*new GraphRequest(
+                        AccessToken.getCurrentAccessToken(),
+                        "/" + id + "/friends",
+                        null,
+                        HttpMethod.GET,
+                        new GraphRequest.Callback() {
+                            public void onCompleted(GraphResponse response) {
+                                Log.e("response", response.getJSONArray().toString());
+                            }
+                        }
+                ).executeAsync();*/
+
                 /* go back to main activity */
                 getActivity().finish();
 
@@ -112,6 +133,8 @@ public class LoginActivityFragment extends Fragment {
 
             }
         });
+
+
 
         return view;
     }
@@ -138,13 +161,14 @@ public class LoginActivityFragment extends Fragment {
                     Regions.US_EAST_1 // Region
             );
 
-            String token = AccessToken.getCurrentAccessToken().getToken();
+            String token = PreferenceUtils.getSharedValues(getString(R.string.user_token_key), getActivity());
 
             Map<String, String> logins = new HashMap<String, String>();
             logins.put("graph.facebook.com", token);
             credentialsProvider.setLogins(logins);
 
-            Log.e("identity id", credentialsProvider.getIdentityId());
+            //Log.e("credentials", credentialsProvider.getCredentials().toString());
+
 
             /* add user identity to shared preference */
             //PreferenceUtils.setSharedValues(getString(R.string.user_identity_id), credentialsProvider.getIdentityId(), mContext);
