@@ -3,6 +3,8 @@ package com.example.android.csula.challengefriends;
 import android.Manifest;
 import android.app.Fragment;
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Build;
@@ -11,9 +13,14 @@ import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.android.csula.challengefriends.models.User;
+import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +32,7 @@ public class ContactActivityFragment extends Fragment {
 
     ListView contactsListView;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
+    private String challengeId;
 
     public ContactActivityFragment() {
     }
@@ -33,9 +41,22 @@ public class ContactActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        Intent intent = getActivity().getIntent();
+        challengeId = intent.getStringExtra("challengeId");
+
         View rootView = inflater.inflate(R.layout.fragment_contact, container, false);
         contactsListView = (ListView) rootView.findViewById(R.id.listview_contacts);
-        showContacts();
+
+        List<User> friends = PreferenceUtils.getFriends(getActivity());
+        ArrayAdapter<User> adapter = new UserAdapter(getActivity(), R.id.textview_contact_item, (ArrayList<User>) friends);
+        contactsListView.setAdapter(adapter);
+
+        contactsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                /* save the challenge id in receivers received challenges and senders sent challenges */
+            }
+        });
 
         return rootView;
     }
@@ -84,6 +105,40 @@ public class ContactActivityFragment extends Fragment {
         cursor.close();
 
         return contacts;
+    }
+
+    /* custom user adapter */
+    public class UserAdapter extends ArrayAdapter<User> {
+        private ViewHolder viewHolder;
+
+        private class ViewHolder {
+            private TextView itemView;
+        }
+
+        public UserAdapter(Context context, int textViewResourceId, ArrayList<User> items) {
+            super(context, textViewResourceId, items);
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(this.getContext())
+                        .inflate(R.layout.listview_item_contact, parent, false);
+
+                viewHolder = new ViewHolder();
+                viewHolder.itemView = (TextView) convertView.findViewById(R.id.textview_contact_item);
+
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
+
+            User item = getItem(position);
+            if (item != null) {
+                viewHolder.itemView.setText(item.getName());
+            }
+
+            return convertView;
+        }
     }
 
 }

@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
@@ -32,7 +33,7 @@ import java.util.List;
 public class MainActivityFragment extends Fragment {
     private static View rootView;
     private static ViewPager pager;
-    private static ArrayAdapter<String> adapter;
+    private static ArrayAdapter<Challenge> challengeAdapter;
     private static Context context;
     private static List<Challenge> challenges;
 
@@ -80,6 +81,7 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        context = getActivity();
         final String userToken = PreferenceUtils.getSharedValues(getString(R.string.user_token_key), getActivity());
 
         if(userToken == null) {
@@ -87,8 +89,7 @@ public class MainActivityFragment extends Fragment {
             startLoginActivity();
         }
 
-        adapter = new ArrayAdapter(getActivity(), R.layout.listview_item_challenge,
-                R.id.textview_challenge_item, new ArrayList<String>());
+        challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
 
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
@@ -119,10 +120,12 @@ public class MainActivityFragment extends Fragment {
                 case 0:
                     //String[] mockData = {"challenge1", "challenge2", "challenge3", "challenge4", "challenge5"};
                     //subFragment.setAdapter(adapter);
+                    subFragment.setMode(0);
                     break;
                 case 1:
                     //String[] mockData2 = {"rchallenge1", "rchallenge2", "rchallenge3", "rchallenge4", "rchallenge5"};
                     //subFragment.setAdapter(adapter);
+                    subFragment.setMode(1);
                     break;
             }
 
@@ -152,6 +155,7 @@ public class MainActivityFragment extends Fragment {
     public static class SubFragment extends Fragment {
         private int position;
         private Context context;
+        private int mode = 0;
 
         public SubFragment(){}
 
@@ -161,6 +165,10 @@ public class MainActivityFragment extends Fragment {
             this.position = position;
         }
 
+        public void setMode(int mode) {
+            this.mode = mode;
+        }
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             rootView = inflater.inflate(R.layout.sub_fragment_layout, container, false);
@@ -168,11 +176,22 @@ public class MainActivityFragment extends Fragment {
             ListView listView = (ListView) rootView.findViewById(R.id.listview_sub_fragment);
             listView.setItemsCanFocus(true);
 
-            listView.setAdapter(adapter);
+            listView.setAdapter(challengeAdapter);
 
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    switch(mode){
+                        /* if clicked on challenge get list of facebook friends from preferences here */
+                        case 0:
+                            Intent intent = new Intent(context, ContactActivity.class);
+                            intent.putExtra("challengeId", "challengeId");
+                            startActivity(intent);
+                            break;
+                        /* if clicked on received challenge open video sharing */
+                        case 1:
+                            break;
+                    }
 
                 }
             });
@@ -182,9 +201,9 @@ public class MainActivityFragment extends Fragment {
     }
     /*----------------------------------------------------------*/
 
-    public static class FetchChallengeTask extends AsyncTask<Void, Void, String[]>{
+    public static class FetchChallengeTask extends AsyncTask<Void, Void, Challenge[]>{
         @Override
-        protected String[] doInBackground(Void... params) {
+        protected Challenge[] doInBackground(Void... params) {
             /* test DynamoDB */
             CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                     context,
@@ -208,22 +227,51 @@ public class MainActivityFragment extends Fragment {
                 challenges.add((Challenge)result.get(i));
             }
 
-            List<String> data = new ArrayList<>();
-            for(Challenge ch: challenges){
-                data.add(ch.toString());
-            }
-
-            return data.toArray(new String[0]);
+            return challenges.toArray(new Challenge[0]);
         }
 
         @Override
-        protected void onPostExecute(String[] strings) {
-            if(strings != null) {
-                adapter.clear();
-                for(String s: strings) {
-                    adapter.add(s);
+        protected void onPostExecute(Challenge[] challenges) {
+            if(challenges != null) {
+                challengeAdapter.clear();
+                for(Challenge c: challenges) {
+                    challengeAdapter.add(c);
                 }
             }
+        }
+    }
+
+    /* custom challenge adapter */
+    public class ChallengeAdapter extends ArrayAdapter<Challenge> {
+        private ViewHolder viewHolder;
+
+        private class ViewHolder {
+            private TextView itemView;
+        }
+
+        public ChallengeAdapter(Context context, int textViewResourceId, ArrayList<Challenge> items) {
+            super(context, textViewResourceId, items);
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(this.getContext())
+                        .inflate(R.layout.listview_item_contact, parent, false);
+
+                viewHolder = new ViewHolder();
+                viewHolder.itemView = (TextView) convertView.findViewById(R.id.textview_contact_item);
+
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
+
+            Challenge item = getItem(position);
+            if (item != null) {
+                viewHolder.itemView.setText(item.getDescription());
+            }
+
+            return convertView;
         }
     }
 }

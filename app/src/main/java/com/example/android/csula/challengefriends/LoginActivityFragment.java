@@ -1,17 +1,19 @@
 package com.example.android.csula.challengefriends;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.regions.Regions;
+import com.example.android.csula.challengefriends.models.User;
+import com.example.android.csula.challengefriends.utils.JsonUtils;
 import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -19,6 +21,9 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.login.LoginResult;
@@ -37,6 +42,8 @@ public class LoginActivityFragment extends Fragment {
     private CallbackManager callbackManager;
     private AccessTokenTracker tokenTracker;
     private ProfileTracker profileTracker;
+    private Context context;
+    private User currentUser;
 
     public LoginActivityFragment() {
     }
@@ -78,12 +85,12 @@ public class LoginActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        context = getActivity();
+        currentUser = new User();
+
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
-        String[] permissions = {"id", "email", "user_friends"};
         loginButton.setReadPermissions(Arrays.asList("user_friends"));
-        loginButton.setReadPermissions(Arrays.asList("id"));
-        loginButton.setReadPermissions(Arrays.asList("email"));
         loginButton.setFragment(this);
 
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
@@ -91,46 +98,49 @@ public class LoginActivityFragment extends Fragment {
             public void onSuccess(LoginResult loginResult) {
 
                 AccessToken accessToken = AccessToken.getCurrentAccessToken();
-                /* save token and user in shared values */
+                /* save token in shared values */
                 PreferenceUtils.setSharedValues(getString(R.string.user_token_key), accessToken.getToken(), getActivity());
+
+                /* set current user */
+                new GraphRequest(
+                        accessToken,
+                        "/me",
+                        null,
+                        HttpMethod.GET,
+                        new GraphRequest.Callback() {
+                            public void onCompleted(GraphResponse response) {
+                                currentUser = JsonUtils.getUserInfo(response.getRawResponse());
+                            }
+                        }
+                ).executeAsync();
 
                 AWSCognitoTask awsCognitoTask = new AWSCognitoTask();
                 awsCognitoTask.execute();
 
                 /* get fb friends, save in preferences */
-                String id = AccessToken.getCurrentAccessToken().getUserId();
-                Log.e("id", id);
-
-                /*new GraphRequest(
-                        AccessToken.getCurrentAccessToken(),
-                        "/" + id + "/friends",
+                String fbId = AccessToken.getCurrentAccessToken().getUserId();
+                new GraphRequest(
+                        accessToken,
+                        "/" + fbId + "/friends",
                         null,
                         HttpMethod.GET,
                         new GraphRequest.Callback() {
                             public void onCompleted(GraphResponse response) {
-                                Log.e("response", response.getJSONArray().toString());
+                                PreferenceUtils.setFriends(JsonUtils.getFriends(response.getRawResponse()), context);
                             }
                         }
-                ).executeAsync();*/
+                ).executeAsync();
 
                 /* go back to main activity */
                 getActivity().finish();
-
-                Profile profile = Profile.getCurrentProfile();
-                if(profile != null) {
-                    //Log.e("fname", profile.getFirstName());
-                    //Log.e("lname", profile.getLastName());
-                }
             }
 
             @Override
             public void onCancel() {
-
             }
 
             @Override
             public void onError(FacebookException error) {
-
             }
         });
 
@@ -161,10 +171,29 @@ public class LoginActivityFragment extends Fragment {
                     Regions.US_EAST_1 // Region
             );
 
-            String token = PreferenceUtils.getSharedValues(getString(R.string.user_token_key), getActivity());
+            /* save current user in preferences */
+            currentUser.setCognitoId(credentialsProvider.getIdentityId());
+            PreferenceUtils.setCurrentUser(currentUser, getActivity());
+
+            /*CognitoSyncManager syncClient = new CognitoSyncManager(
+                    getContext(),
+                    Regions.US_EAST_1, // Region
+                    credentialsProvider);*/
+
+            // Create a record in a dataset and synchronize with the server
+            /*Dataset dataset = syncClient.openOrCreateDataset("myDataset");
+            dataset.put("myKey", "myValue");
+            dataset.synchronize(new DefaultSyncCallback() {
+                @Override
+                public void onSuccess(Dataset dataset, List newRecords) {
+                    Log.e("dataset", dataset.get("myKey"));
+                }
+            });*/
+
+            String fbToken = PreferenceUtils.getSharedValues(context.getString(R.string.user_token_key), context);
 
             Map<String, String> logins = new HashMap<String, String>();
-            logins.put("graph.facebook.com", token);
+            logins.put("graph.facebook.com", fbToken);
             credentialsProvider.setLogins(logins);
 
             //Log.e("credentials", credentialsProvider.getCredentials().toString());
@@ -190,20 +219,13 @@ public class LoginActivityFragment extends Fragment {
 
             return null;
         }
-    }
 
-        /*    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSION_REQUEST_READ_SMS : {
-                if(grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    *//* permission was granted *//*
-                }else {
-                    *//* permission was denied *//*
-                }
+        @Override
+        protected void onPostExecute(Void result){
+            if(isAdded()){
+                getResources().getString(R.string.app_name);
             }
         }
-    }*/
+    }
+
 }
