@@ -23,14 +23,19 @@ public class PreferenceUtils {
     }
 
     public static User getCurrentUser(Context context){
+        User user;
         Gson gson = new Gson();
         String json = getSharedValues(context.getString(R.string.user_prefs_key), context);
-        User user = gson.fromJson(json, User.class);
+        user = (json == null || json == "") ? new User() : gson.fromJson(json, User.class);
         return user;
     }
 
     public static void clearCurrentUser( Context context){
         removeFromSharedValues(context.getString(R.string.user_prefs_key), context);
+    }
+
+    public static void clearUserToken( Context context){
+        removeFromSharedValues(context.getString(R.string.user_token_key), context);
     }
 
     public static String getSharedValues(String key, Context context) {

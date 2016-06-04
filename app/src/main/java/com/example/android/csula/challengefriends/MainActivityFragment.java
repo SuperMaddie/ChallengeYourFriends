@@ -19,6 +19,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.com.google.gson.Gson;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBScanExpression;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.PaginatedScanList;
@@ -72,7 +73,11 @@ public class MainActivityFragment extends Fragment {
 
     public void logout() {
         //LoginManager.getInstance().logOut();
-        PreferenceUtils.setSharedValues(getString(R.string.user_token_key), null, getActivity());
+        /* remove user's token */
+        PreferenceUtils.clearUserToken(getActivity());
+        /* remove */
+        PreferenceUtils.clearCurrentUser(getActivity());
+
         Intent intent = new Intent(getActivity(), MainActivity.class);
         startActivity(intent);
     }
@@ -118,14 +123,10 @@ public class MainActivityFragment extends Fragment {
             List<String> data;
             switch(pos){
                 case 0:
-                    //String[] mockData = {"challenge1", "challenge2", "challenge3", "challenge4", "challenge5"};
-                    //subFragment.setAdapter(adapter);
-                    subFragment.setMode(0);
+                    subFragment.setPosition(0);
                     break;
                 case 1:
-                    //String[] mockData2 = {"rchallenge1", "rchallenge2", "rchallenge3", "rchallenge4", "rchallenge5"};
-                    //subFragment.setAdapter(adapter);
-                    subFragment.setMode(1);
+                    subFragment.setPosition(1);
                     break;
             }
 
@@ -153,20 +154,14 @@ public class MainActivityFragment extends Fragment {
     }
 
     public static class SubFragment extends Fragment {
-        private int position;
+        private int position = 0;
         private Context context;
-        private int mode = 0;
-
         public SubFragment(){}
 
         public void setContext(Context context) {this.context = context;}
 
         public void setPosition(int position) {
             this.position = position;
-        }
-
-        public void setMode(int mode) {
-            this.mode = mode;
         }
 
         @Override
@@ -176,23 +171,30 @@ public class MainActivityFragment extends Fragment {
             ListView listView = (ListView) rootView.findViewById(R.id.listview_sub_fragment);
             listView.setItemsCanFocus(true);
 
-            listView.setAdapter(challengeAdapter);
+            switch(position){
+                case 0:
+                    listView.setAdapter(challengeAdapter);
+                    break;
+                case 1:
+                    listView.setAdapter(challengeAdapter);
+                    break;
+            }
 
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    switch(mode){
+                public void onItemClick(AdapterView<?> parent, View view, int index, long id) {
+                    Challenge challenge = (Challenge)parent.getItemAtPosition(index);
+                    switch(position){
                         /* if clicked on challenge get list of facebook friends from preferences here */
                         case 0:
                             Intent intent = new Intent(context, ContactActivity.class);
-                            intent.putExtra("challengeId", "challengeId");
+                            intent.putExtra("challenge", new Gson().toJson(challenge, Challenge.class));
                             startActivity(intent);
                             break;
                         /* if clicked on received challenge open video sharing */
                         case 1:
                             break;
                     }
-
                 }
             });
 

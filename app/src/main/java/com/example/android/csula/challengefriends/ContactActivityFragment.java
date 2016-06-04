@@ -1,15 +1,10 @@
 package com.example.android.csula.challengefriends;
 
-import android.Manifest;
 import android.app.Fragment;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +12,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.amazonaws.com.google.gson.Gson;
+import com.example.android.csula.challengefriends.models.Challenge;
 import com.example.android.csula.challengefriends.models.User;
 import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 
@@ -32,7 +28,7 @@ public class ContactActivityFragment extends Fragment {
 
     ListView contactsListView;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
-    private String challengeId;
+    private Challenge challenge;
 
     public ContactActivityFragment() {
     }
@@ -42,7 +38,7 @@ public class ContactActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         Intent intent = getActivity().getIntent();
-        challengeId = intent.getStringExtra("challengeId");
+        challenge = new Gson().fromJson(intent.getStringExtra("challenge").toString(), Challenge.class);
 
         View rootView = inflater.inflate(R.layout.fragment_contact, container, false);
         contactsListView = (ListView) rootView.findViewById(R.id.listview_contacts);
@@ -55,13 +51,15 @@ public class ContactActivityFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 /* save the challenge id in receivers received challenges and senders sent challenges */
+                User user = (User)parent.getItemAtPosition(position);
+                Log.e("user", user.getCognitoId() + " " + user.getFacebookId());
             }
         });
 
         return rootView;
     }
 
-    private void showContacts() {
+    /*private void showContacts() {
         // Check the SDK version and whether the permission is already granted or not.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
@@ -72,9 +70,9 @@ public class ContactActivityFragment extends Fragment {
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), R.layout.listview_item_contact, R.id.textview_contact_item, contacts);
             contactsListView.setAdapter(adapter);
         }
-    }
+    }*/
 
-    @Override
+    /*@Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -83,9 +81,9 @@ public class ContactActivityFragment extends Fragment {
                 Toast.makeText(getActivity(), "Until you grant the permission, we cannot display the names", Toast.LENGTH_SHORT).show();
             }
         }
-    }
+    }*/
 
-    private List<String> getContactNames() {
+    /*private List<String> getContactNames() {
         List<String> contacts = new ArrayList<>();
         // Get the ContentResolver
         ContentResolver resolver = getActivity().getContentResolver();
@@ -105,7 +103,7 @@ public class ContactActivityFragment extends Fragment {
         cursor.close();
 
         return contacts;
-    }
+    }*/
 
     /* custom user adapter */
     public class UserAdapter extends ArrayAdapter<User> {

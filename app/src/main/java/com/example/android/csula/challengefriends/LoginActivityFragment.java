@@ -11,8 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.regions.Regions;
+import com.example.android.csula.challengefriends.models.MyProfile;
 import com.example.android.csula.challengefriends.models.User;
+import com.example.android.csula.challengefriends.utils.DynamoDbUtils;
 import com.example.android.csula.challengefriends.utils.JsonUtils;
 import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 import com.facebook.AccessToken;
@@ -44,6 +45,7 @@ public class LoginActivityFragment extends Fragment {
     private ProfileTracker profileTracker;
     private Context context;
     private User currentUser;
+    private AccessToken accessToken;
 
     public LoginActivityFragment() {
     }
@@ -97,22 +99,9 @@ public class LoginActivityFragment extends Fragment {
             @Override
             public void onSuccess(LoginResult loginResult) {
 
-                AccessToken accessToken = AccessToken.getCurrentAccessToken();
+                accessToken = AccessToken.getCurrentAccessToken();
                 /* save token in shared values */
                 PreferenceUtils.setSharedValues(getString(R.string.user_token_key), accessToken.getToken(), getActivity());
-
-                /* set current user */
-                new GraphRequest(
-                        accessToken,
-                        "/me",
-                        null,
-                        HttpMethod.GET,
-                        new GraphRequest.Callback() {
-                            public void onCompleted(GraphResponse response) {
-                                currentUser = JsonUtils.getUserInfo(response.getRawResponse());
-                            }
-                        }
-                ).executeAsync();
 
                 AWSCognitoTask awsCognitoTask = new AWSCognitoTask();
                 awsCognitoTask.execute();
@@ -164,16 +153,43 @@ public class LoginActivityFragment extends Fragment {
     public class AWSCognitoTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            /* Initialize the Amazon Cognito credentials provider */
-            CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
-                    getContext(),
-                    "us-east-1:764851a6-88d3-4ec3-932f-fa716472f6f8", // Identity Pool ID
-                    Regions.US_EAST_1 // Region
-            );
 
-            /* save current user in preferences */
+            CognitoCachingCredentialsProvider credentialsProvider = DynamoDbUtils.init(getContext());
+
+            /* set current user in preferences */
+            new GraphRequest(
+                    accessToken,
+                    "/me",
+                    null,
+                    HttpMethod.GET,
+                    new GraphRequest.Callback() {
+                        public void onCompleted(GraphResponse response) {
+                            currentUser = PreferenceUtils.getCurrentUser(context);
+                            User user = JsonUtils.getUserInfo(response.getRawResponse());
+                            currentUser.setName(user.getName());
+                            currentUser.setFacebookId(user.getFacebookId());
+                        }
+                    }
+            ).executeAndWait();
+
             currentUser.setCognitoId(credentialsProvider.getIdentityId());
-            PreferenceUtils.setCurrentUser(currentUser, getActivity());
+            PreferenceUtils.setCurrentUser(currentUser, context);
+
+            /* add user info to dynamoDB profiles table */
+            /*Map<String, AttributeValue> info = new HashMap<>();
+            AttributeValue attributeValue = new AttributeValue();
+            attributeValue.setS(currentUser.getCognitoId());
+            info.put("userId", attributeValue);
+            attributeValue = new AttributeValue();
+            //attributeValue.setS(((TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE)).getLine1Number().toString());
+            attributeValue.setS(currentUser.getFacebookId());
+            info.put("facebook_id", attributeValue);*/
+
+            MyProfile profile = DynamoDbUtils.loadProfile(credentialsProvider, currentUser.getCognitoId());
+
+            if(profile == null) {
+                profile = DynamoDbUtils.saveProfile(credentialsProvider, currentUser);
+            }
 
             /*CognitoSyncManager syncClient = new CognitoSyncManager(
                     getContext(),
@@ -196,36 +212,15 @@ public class LoginActivityFragment extends Fragment {
             logins.put("graph.facebook.com", fbToken);
             credentialsProvider.setLogins(logins);
 
-            //Log.e("credentials", credentialsProvider.getCredentials().toString());
-
-
-            /* add user identity to shared preference */
-            //PreferenceUtils.setSharedValues(getString(R.string.user_identity_id), credentialsProvider.getIdentityId(), mContext);
-
-            /* add user info to dynamoDB */
-            //User user = new User(credentialsProvider.getIdentityId(), "11111111");
-            /*Map<String, AttributeValue> info = new HashMap<>();
-            AttributeValue attributeValue = new AttributeValue();
-            attributeValue.setS(credentialsProvider.getIdentityId());
-            info.put("user_id", attributeValue);
-            attributeValue = new AttributeValue();
-            //attributeValue.setS(((TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE)).getLine1Number().toString());
-            attributeValue.setS("Phone Number");
-            info.put("phone_number", attributeValue);*/
-
-            /*AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
-            DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
-            mapper.save(user);*/
-
             return null;
         }
 
-        @Override
+        /*@Override
         protected void onPostExecute(Void result){
             if(isAdded()){
                 getResources().getString(R.string.app_name);
             }
-        }
+        }*/
     }
 
 }

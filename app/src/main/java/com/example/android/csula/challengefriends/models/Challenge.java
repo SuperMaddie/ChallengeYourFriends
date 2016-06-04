@@ -4,11 +4,13 @@ import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBAttribut
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBHashKey;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBTable;
 
+import java.io.Serializable;
+
 /**
  * Created by Mahdiye on 6/1/2016.
  */
 @DynamoDBTable(tableName = "challenges")
-public class Challenge {
+public class Challenge implements Serializable{
     private String id;
     private String title;
     private String description;
