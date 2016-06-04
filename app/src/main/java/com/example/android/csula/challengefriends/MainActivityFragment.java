@@ -20,12 +20,8 @@ import android.widget.TextView;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.com.google.gson.Gson;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBScanExpression;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.PaginatedScanList;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.example.android.csula.challengefriends.models.Challenge;
+import com.example.android.csula.challengefriends.utils.DynamoDbUtils;
 import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 
 import java.util.ArrayList;
@@ -35,8 +31,8 @@ public class MainActivityFragment extends Fragment {
     private static View rootView;
     private static ViewPager pager;
     private static ArrayAdapter<Challenge> challengeAdapter;
+    private static ArrayAdapter<Challenge> receivedChallengeAdapter;
     private static Context context;
-    private static List<Challenge> challenges;
 
     public MainActivityFragment() {
     }
@@ -50,12 +46,9 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        context = getActivity();
-        updateChallenges();
     }
 
     public void updateChallenges(){
-        challenges = new ArrayList();
         FetchChallengeTask task = new FetchChallengeTask();
         task.execute();
         //PreferenceUtils.setSharedValues("challenges", challenges);
@@ -72,11 +65,10 @@ public class MainActivityFragment extends Fragment {
     }
 
     public void logout() {
-        //LoginManager.getInstance().logOut();
         /* remove user's token */
         PreferenceUtils.clearUserToken(getActivity());
-        /* remove */
-        PreferenceUtils.clearCurrentUser(getActivity());
+        /* remove current user */
+        //PreferenceUtils.clearCurrentUser(getActivity());
 
         Intent intent = new Intent(getActivity(), MainActivity.class);
         startActivity(intent);
@@ -94,12 +86,15 @@ public class MainActivityFragment extends Fragment {
             startLoginActivity();
         }
 
-        challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
-
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
+        receivedChallengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
 
-        pager = (ViewPager)rootView.findViewById(R.id.viewpager_main);
+        updateChallenges();
+
+        pager = (ViewPager) rootView.findViewById(R.id.viewpager_main);
         pager.setAdapter(new MyPagerAdapter(getActivity().getSupportFragmentManager()));
+
 
         return rootView;
     }
@@ -119,8 +114,7 @@ public class MainActivityFragment extends Fragment {
         public Fragment getItem(int pos) {
             SubFragment subFragment = new SubFragment();
             subFragment.setPosition(pos);
-            subFragment.setContext(getActivity());
-            List<String> data;
+            subFragment.setContext(context);
             switch(pos){
                 case 0:
                     subFragment.setPosition(0);
@@ -129,7 +123,6 @@ public class MainActivityFragment extends Fragment {
                     subFragment.setPosition(1);
                     break;
             }
-
             return subFragment;
         }
 
@@ -176,7 +169,7 @@ public class MainActivityFragment extends Fragment {
                     listView.setAdapter(challengeAdapter);
                     break;
                 case 1:
-                    listView.setAdapter(challengeAdapter);
+                    listView.setAdapter(receivedChallengeAdapter);
                     break;
             }
 
@@ -185,7 +178,7 @@ public class MainActivityFragment extends Fragment {
                 public void onItemClick(AdapterView<?> parent, View view, int index, long id) {
                     Challenge challenge = (Challenge)parent.getItemAtPosition(index);
                     switch(position){
-                        /* if clicked on challenge get list of facebook friends from preferences here */
+                        /* if clicked on a challenge, show list of facebook friends */
                         case 0:
                             Intent intent = new Intent(context, ContactActivity.class);
                             intent.putExtra("challenge", new Gson().toJson(challenge, Challenge.class));
@@ -203,41 +196,35 @@ public class MainActivityFragment extends Fragment {
     }
     /*----------------------------------------------------------*/
 
-    public static class FetchChallengeTask extends AsyncTask<Void, Void, Challenge[]>{
+    public static class FetchChallengeTask extends AsyncTask<Void, Void, Object[]>{
         @Override
-        protected Challenge[] doInBackground(Void... params) {
-            /* test DynamoDB */
-            CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
-                    context,
-                    "us-east-1:764851a6-88d3-4ec3-932f-fa716472f6f8", // Identity Pool ID
-                    Regions.US_EAST_1 // Region
-            );
-            AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
-            DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
-            /*ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("challenges");
-            ScanResult result = ddbClient.scan(scanRequest);
-            for (Map<String, AttributeValue> item : result.getItems()) {
-                Log.e("item", item.toString());
-            }*/
+        protected Object[] doInBackground(Void... params) {
+            /* retrieve challenges */
+            List<Challenge> challenges;
+            List<Challenge> receivedChallenges;
+            CognitoCachingCredentialsProvider credentialsProvider = DynamoDbUtils.init(context);
+            challenges = DynamoDbUtils.getChallenges(credentialsProvider);
+            receivedChallenges = DynamoDbUtils.getReceivedChallenges(credentialsProvider, PreferenceUtils.getCurrentUser(context));
 
-            DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-            PaginatedScanList result = mapper.scan(
-                    Challenge.class,
-                    scanExpression);
-            for(int i = 0; i<result.size(); i++){
-                challenges.add((Challenge)result.get(i));
-            }
-
-            return challenges.toArray(new Challenge[0]);
+            return new Object[]{challenges, receivedChallenges};
         }
 
         @Override
-        protected void onPostExecute(Challenge[] challenges) {
-            if(challenges != null) {
+        protected void onPostExecute(Object[] result) {
+            List<Challenge> challenges;
+            List<Challenge> receivedChallenges;
+            if(result[0] != null) {
+                challenges = (ArrayList<Challenge>)result[0];
                 challengeAdapter.clear();
                 for(Challenge c: challenges) {
                     challengeAdapter.add(c);
+                }
+            }
+            if(result[1] != null){
+                receivedChallenges = (ArrayList<Challenge>)result[1];
+                receivedChallengeAdapter.clear();
+                for(Challenge c: receivedChallenges) {
+                    receivedChallengeAdapter.add(c);
                 }
             }
         }

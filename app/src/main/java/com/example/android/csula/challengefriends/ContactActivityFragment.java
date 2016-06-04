@@ -3,6 +3,7 @@ package com.example.android.csula.challengefriends;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,11 +16,15 @@ import android.widget.TextView;
 
 import com.amazonaws.com.google.gson.Gson;
 import com.example.android.csula.challengefriends.models.Challenge;
+import com.example.android.csula.challengefriends.models.MyProfile;
 import com.example.android.csula.challengefriends.models.User;
+import com.example.android.csula.challengefriends.utils.DynamoDbUtils;
 import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -29,6 +34,8 @@ public class ContactActivityFragment extends Fragment {
     ListView contactsListView;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
     private Challenge challenge;
+    private User user;
+    private Context context;
 
     public ContactActivityFragment() {
     }
@@ -36,6 +43,8 @@ public class ContactActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        context = getActivity();
 
         Intent intent = getActivity().getIntent();
         challenge = new Gson().fromJson(intent.getStringExtra("challenge").toString(), Challenge.class);
@@ -51,8 +60,9 @@ public class ContactActivityFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 /* save the challenge id in receivers received challenges and senders sent challenges */
-                User user = (User)parent.getItemAtPosition(position);
-                Log.e("user", user.getCognitoId() + " " + user.getFacebookId());
+                user = (User)parent.getItemAtPosition(position);
+                AWSTask task = new AWSTask();
+                task.execute();
             }
         });
 
@@ -136,6 +146,41 @@ public class ContactActivityFragment extends Fragment {
             }
 
             return convertView;
+        }
+    }
+
+    public class AWSTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            /* ...should prompt for confirmation (add later)...*/
+            /* add challenge id to senders list */
+            try {
+                MyProfile sendersProfile = DynamoDbUtils.loadProfile
+                        (DynamoDbUtils.init(context), PreferenceUtils.getCurrentUser(context).getCognitoId());
+
+                Set set = new HashSet(sendersProfile.getSentChallengesList());
+                set.add(challenge.getId());
+                List list = new ArrayList(set);
+                sendersProfile.setSentChallengesList(list);
+                DynamoDbUtils.saveProfile(DynamoDbUtils.init(context), sendersProfile);
+            }catch(Exception e) {
+                Log.e("Profile load exception", e.getMessage());
+            }
+
+            /* add challenge id to receivers list */
+            MyProfile receiversProfile = DynamoDbUtils.loadProfileByFacebookId(DynamoDbUtils.init(context), user.getFacebookId());
+            try {
+                Set set = new HashSet(receiversProfile.getReceivedChallengesList());
+                set.add(challenge.getId());
+                List list = new ArrayList(set);
+                receiversProfile.setReceivedChallengesList(list);
+
+                DynamoDbUtils.saveProfile(DynamoDbUtils.init(context), receiversProfile);
+            }catch(Exception e){
+                Log.e("Profile Load Exception", e.getMessage());
+            }
+
+            return null;
         }
     }
 
