@@ -10,6 +10,7 @@ public class User implements Serializable{
     private String cognitoId;
     private String facebookId;
     private String name;
+    private String GCMId;
 
     public User(){}
 
@@ -41,6 +42,14 @@ public class User implements Serializable{
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getGCMId() {
+        return GCMId;
+    }
+
+    public void setGCMId(String GCMId) {
+        this.GCMId = GCMId;
     }
 
     @Override

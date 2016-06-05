@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -98,6 +99,20 @@ public class LoginActivityFragment extends Fragment {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
+                // regiter the user in GCM if not already exists
+                GCMClientManager pushClientManager = new GCMClientManager(getActivity(), "513690848871");
+                pushClientManager.registerIfNeeded(new GCMClientManager.RegistrationCompletedHandler() {
+                    @Override
+                    public void onSuccess(String registrationId, boolean isNewRegistration) {
+
+                        Log.d("Registration id",registrationId);
+                        //send this registrationId to your server
+                    }
+                    @Override
+                    public void onFailure(String ex) {
+                        super.onFailure(ex);
+                    }
+                });
 
                 accessToken = AccessToken.getCurrentAccessToken();
                 /* save token in shared values */
