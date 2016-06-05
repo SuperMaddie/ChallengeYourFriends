@@ -51,7 +51,6 @@ public class MainActivityFragment extends Fragment {
     public void updateChallenges(){
         FetchChallengeTask task = new FetchChallengeTask();
         task.execute();
-        //PreferenceUtils.setSharedValues("challenges", challenges);
     }
 
     @Override
@@ -79,22 +78,22 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         context = getActivity();
+        rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
         final String userToken = PreferenceUtils.getSharedValues(getString(R.string.user_token_key), getActivity());
 
         if(userToken == null) {
             /* redirect user to login */
             startLoginActivity();
+        }else {
+            challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
+            receivedChallengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
+
+            updateChallenges();
+
+            pager = (ViewPager) rootView.findViewById(R.id.viewpager_main);
+            pager.setAdapter(new MyPagerAdapter(getActivity().getSupportFragmentManager()));
         }
-
-        rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
-        receivedChallengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
-
-        updateChallenges();
-
-        pager = (ViewPager) rootView.findViewById(R.id.viewpager_main);
-        pager.setAdapter(new MyPagerAdapter(getActivity().getSupportFragmentManager()));
-
 
         return rootView;
     }
@@ -102,6 +101,7 @@ public class MainActivityFragment extends Fragment {
     public void startLoginActivity(){
         Intent intent = new Intent(getActivity(), LoginActivity.class);
         startActivity(intent);
+        getActivity().finish();
     }
 
     /*----------------View Pager Custom Adapter----------------*/

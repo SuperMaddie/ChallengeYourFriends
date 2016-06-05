@@ -121,7 +121,7 @@ public class LoginActivityFragment extends Fragment {
                 ).executeAsync();
 
                 /* go back to main activity */
-                getActivity().finish();
+                startMainActivity();
             }
 
             @Override
@@ -136,6 +136,12 @@ public class LoginActivityFragment extends Fragment {
 
 
         return view;
+    }
+
+    public void startMainActivity(){
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        startActivity(intent);
+        getActivity().finish();
     }
 
     @Override
@@ -187,6 +193,7 @@ public class LoginActivityFragment extends Fragment {
 
             MyProfile profile = DynamoDbUtils.loadProfile(credentialsProvider, currentUser.getCognitoId());
 
+            /* if user's profile does not exist in db save it */
             if(profile == null) {
                 profile = DynamoDbUtils.saveProfile(credentialsProvider, currentUser);
             }
