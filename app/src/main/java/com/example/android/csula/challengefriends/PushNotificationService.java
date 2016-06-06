@@ -14,7 +14,7 @@ public class PushNotificationService extends GcmListenerService {
     public void onMessageReceived(String from, Bundle data) {
         String message = data.getString("message");
         //createNotification(mTitle, push_msg);
-        Log.d("Message Received","From Servr:"+message);
-        //create a notification here
+
+        /*Update database*/
     }
 }
