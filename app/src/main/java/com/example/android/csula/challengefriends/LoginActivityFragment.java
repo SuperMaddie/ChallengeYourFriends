@@ -47,6 +47,7 @@ public class LoginActivityFragment extends Fragment {
     private Context context;
     private User currentUser;
     private AccessToken accessToken;
+    private String GcmId;
 
     public LoginActivityFragment() {
     }
@@ -100,6 +101,7 @@ public class LoginActivityFragment extends Fragment {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 // regiter the user in GCM if not already exists
+
                 System.out.println("Registration Successful putting entry in GCM");
 
                 GCMClientManager pushClientManager = new GCMClientManager(getActivity(), "513690848871");
@@ -107,7 +109,7 @@ public class LoginActivityFragment extends Fragment {
 
                     @Override
                     public void onSuccess(String registrationId, boolean isNewRegistration) {
-
+                        GcmId=registrationId;
                         Log.d("Registration id",registrationId);
                         //send this registrationId to your server
                     }
@@ -198,6 +200,7 @@ public class LoginActivityFragment extends Fragment {
             ).executeAndWait();
 
             currentUser.setCognitoId(credentialsProvider.getIdentityId());
+            currentUser.setGCMId(GcmId);
 
             PreferenceUtils.setCurrentUser(currentUser, context);
 
