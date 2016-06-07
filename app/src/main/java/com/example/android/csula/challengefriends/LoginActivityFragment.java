@@ -100,8 +100,11 @@ public class LoginActivityFragment extends Fragment {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 // regiter the user in GCM if not already exists
+                System.out.println("Registration Successful putting entry in GCM");
+
                 GCMClientManager pushClientManager = new GCMClientManager(getActivity(), "513690848871");
                 pushClientManager.registerIfNeeded(new GCMClientManager.RegistrationCompletedHandler() {
+
                     @Override
                     public void onSuccess(String registrationId, boolean isNewRegistration) {
 
@@ -136,7 +139,7 @@ public class LoginActivityFragment extends Fragment {
                 ).executeAsync();
 
                 /* go back to main activity */
-                startMainActivity();
+               startMainActivity();
             }
 
             @Override
@@ -176,7 +179,7 @@ public class LoginActivityFragment extends Fragment {
         protected Void doInBackground(Void... params) {
 
             CognitoCachingCredentialsProvider credentialsProvider = DynamoDbUtils.init(getContext());
-
+            System.out.println("Token inside AWS :"+accessToken);
             /* set current user in preferences */
             new GraphRequest(
                     accessToken,
@@ -189,11 +192,13 @@ public class LoginActivityFragment extends Fragment {
                             User user = JsonUtils.getUserInfo(response.getRawResponse());
                             currentUser.setName(user.getName());
                             currentUser.setFacebookId(user.getFacebookId());
+
                         }
                     }
             ).executeAndWait();
 
             currentUser.setCognitoId(credentialsProvider.getIdentityId());
+
             PreferenceUtils.setCurrentUser(currentUser, context);
 
             /* add user info to dynamoDB profiles table */

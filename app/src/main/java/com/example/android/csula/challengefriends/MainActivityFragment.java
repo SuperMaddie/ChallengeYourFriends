@@ -2,8 +2,10 @@ package com.example.android.csula.challengefriends;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -26,6 +28,8 @@ import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MainActivityFragment extends Fragment {
     private static View rootView;
@@ -79,13 +83,13 @@ public class MainActivityFragment extends Fragment {
 
         context = getActivity();
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
         final String userToken = PreferenceUtils.getSharedValues(getString(R.string.user_token_key), getActivity());
 
         if(userToken == null) {
             /* redirect user to login */
             startLoginActivity();
         }else {
+            System.out.println("User token is: "+userToken);
             challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
             receivedChallengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
 
@@ -130,6 +134,7 @@ public class MainActivityFragment extends Fragment {
         public int getCount() {
             return 2;
         }
+
 
         @Override
         public CharSequence getPageTitle(int position) {
@@ -203,7 +208,10 @@ public class MainActivityFragment extends Fragment {
             List<Challenge> challenges;
             List<Challenge> receivedChallenges;
             CognitoCachingCredentialsProvider credentialsProvider = DynamoDbUtils.init(context);
+            System.out.println("Credential Provider :"+credentialsProvider.toString());
+            System.out.print("Current User is:"+PreferenceUtils.getCurrentUser(context).getName());
             challenges = DynamoDbUtils.getChallenges(credentialsProvider);
+
             receivedChallenges = DynamoDbUtils.getReceivedChallenges(credentialsProvider, PreferenceUtils.getCurrentUser(context));
 
             return new Object[]{challenges, receivedChallenges};
@@ -217,6 +225,7 @@ public class MainActivityFragment extends Fragment {
                 challenges = (ArrayList<Challenge>)result[0];
                 challengeAdapter.clear();
                 for(Challenge c: challenges) {
+                    System.out.println("Challenge:"+c.getTitle());
                     challengeAdapter.add(c);
                 }
             }

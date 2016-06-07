@@ -72,4 +72,6 @@ public class PreferenceUtils {
 
         return friends;
     }
+
+
 }

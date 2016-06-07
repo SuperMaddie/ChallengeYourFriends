@@ -47,4 +47,5 @@ dependencies {
     compile files('libs/aws-android-sdk-ddb-mapper-2.2.16.jar')
     compile 'com.facebook.android:facebook-android-sdk:[4,5)'
     compile 'com.google.android.gms:play-services-gcm:8.4.0'
+
 }

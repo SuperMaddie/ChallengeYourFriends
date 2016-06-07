@@ -46,7 +46,9 @@ public class GCMClientManager {
     public void registerIfNeeded(final RegistrationCompletedHandler handler) {
         if (checkPlayServices()) {
             regid = getRegistrationId(getContext());
+
             if (regid.isEmpty()) {
+
                 registerInBackground(handler);
             } else { // got id from cache
                 Log.i(TAG, regid);
@@ -142,6 +144,7 @@ public class GCMClientManager {
     /**
      * Check the device to make sure it has the Google Play Services APK. If
      * it doesn't, display a dialog that allows users to download the APK from
+     * the Google Play Store or enable it in the device's system settings.
      * the Google Play Store or enable it in the device's system settings.
      */
     private boolean checkPlayServices() {

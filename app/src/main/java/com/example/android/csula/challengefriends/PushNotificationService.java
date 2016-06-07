@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.android.csula.challengefriends.utils.DynamoDbUtils;
 import com.google.android.gms.gcm.GcmListenerService;
 
 /**
@@ -13,8 +14,9 @@ public class PushNotificationService extends GcmListenerService {
     @Override
     public void onMessageReceived(String from, Bundle data) {
         String message = data.getString("message");
-        //createNotification(mTitle, push_msg);
+       /*Update the database table received entry*/
 
-        /*Update database*/
+
+        //create a notification here
     }
 }

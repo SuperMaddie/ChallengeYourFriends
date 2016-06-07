@@ -13,14 +13,35 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amazonaws.com.google.gson.Gson;
+import com.amazonaws.http.HttpClient;
+import com.amazonaws.http.HttpResponse;
 import com.example.android.csula.challengefriends.models.Challenge;
 import com.example.android.csula.challengefriends.models.MyProfile;
 import com.example.android.csula.challengefriends.models.User;
 import com.example.android.csula.challengefriends.utils.DynamoDbUtils;
 import com.example.android.csula.challengefriends.utils.PreferenceUtils;
 
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +60,8 @@ public class ContactActivityFragment extends Fragment {
 
     public ContactActivityFragment() {
     }
+
+    
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -61,7 +84,11 @@ public class ContactActivityFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 /* save the challenge id in receivers received challenges and senders sent challenges */
                 user = (User)parent.getItemAtPosition(position);
+                Toast.makeText(context,user.getName()+":"+challenge.getId(),Toast.LENGTH_SHORT).show();
+                /*Save the challenges id in the dynamo db and send the challenge to the another user using gcm */
+
                 AWSTask task = new AWSTask();
+
                 task.execute();
             }
         });
@@ -154,6 +181,67 @@ public class ContactActivityFragment extends Fragment {
         protected Void doInBackground(Void... params) {
             /* ...should prompt for confirmation (add later)...*/
             /* add challenge id to senders list */
+
+            /*make a post request to GCM */
+
+
+
+            JSONObject obj1=new JSONObject();
+            JSONObject obj2=new JSONObject();
+            try {
+                obj2.put("title","savin");
+                obj2.put("text","Hello Savin Sachdev");
+                obj1.put("notification",obj2);
+                obj1.put("message","Hi");
+                obj1.put("to","frtraLWb1S4:APA91bFq9BnoC5Ah_8g25rccfrsccZwSPN0ygBWSnTpPNCIdmMxdBg1henUijRxkm4kSGLeZt4g7yP9-nOqGwTmjzDkza-U0nvqp6VD9rgZTwUWEQZi632Qu2hKvugVbtY3seD2sJeVT");
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            HttpURLConnection urlConnection;
+            String url;
+            String data = obj1.toString();
+            String result = null;
+            try {
+                //Connect
+                urlConnection = (HttpURLConnection) ((new URL("https://gcm-http.googleapis.com/gcm/send").openConnection()));
+                urlConnection.setDoOutput(true);
+                urlConnection.setRequestProperty("Content-Type", "application/json");
+                urlConnection.setRequestProperty("Authorization","key=AIzaSyB7fHG3C1WF3zM0F0ehzghbF2ULX0vaF7k");
+                urlConnection.setRequestProperty("Accept", "application/json");
+                urlConnection.setRequestMethod("POST");
+                urlConnection.connect();
+
+                //Write
+                OutputStream outputStream = urlConnection.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                writer.write(data);
+                writer.close();
+                outputStream.close();
+
+                //Read
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), "UTF-8"));
+
+                String line = null;
+                StringBuilder sb = new StringBuilder();
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+                result = sb.toString();
+
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("Output is:"+result);
+
+
+
+           /* --------------------------**-----------------------------*/
             try {
                 MyProfile sendersProfile = DynamoDbUtils.loadProfile
                         (DynamoDbUtils.init(context), PreferenceUtils.getCurrentUser(context).getCognitoId());
