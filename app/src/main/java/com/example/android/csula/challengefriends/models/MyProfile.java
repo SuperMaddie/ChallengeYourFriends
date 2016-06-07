@@ -20,6 +20,9 @@ public class MyProfile implements Serializable{
     private List<String> receivedChallengesList;
     private List<String> sentChallengesList;
 
+    public MyProfile(){
+    }
+
     public MyProfile(String cognitoId, String facebookId){
         this.cognitoId = cognitoId;
         this.facebookId = facebookId;
@@ -37,6 +40,8 @@ public class MyProfile implements Serializable{
     }
 
     @DynamoDBAttribute(attributeName = "facebookId")
+    /*@DynamoDBIndexRangeKey(attributeName="facebookId",
+            localSecondaryIndexName="facebookIdIndex")*/
     public String getFacebookId() {
         return facebookId;
     }
