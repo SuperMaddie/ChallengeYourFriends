@@ -1,8 +1,11 @@
 package com.example.android.csula.challengefriends;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -11,6 +14,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,6 +26,8 @@ import android.widget.TextView;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.com.google.gson.Gson;
+import com.example.android.csula.challengefriends.data.ChallengeFriendContract;
+import com.example.android.csula.challengefriends.data.ChallengeFriendHelper;
 import com.example.android.csula.challengefriends.models.Challenge;
 import com.example.android.csula.challengefriends.utils.DynamoDbUtils;
 import com.example.android.csula.challengefriends.utils.PreferenceUtils;
@@ -37,8 +43,10 @@ public class MainActivityFragment extends Fragment {
     private static ArrayAdapter<Challenge> challengeAdapter;
     private static ArrayAdapter<Challenge> receivedChallengeAdapter;
     private static Context context;
-
+    private static ChallengeFriendHelper dbHelper;
+    private static SQLiteDatabase db;
     public MainActivityFragment() {
+
     }
 
     @Override
@@ -89,12 +97,50 @@ public class MainActivityFragment extends Fragment {
             /* redirect user to login */
             startLoginActivity();
         }else {
+          dbHelper = new ChallengeFriendHelper(context);
+            db= dbHelper.getWritableDatabase();
             System.out.println("User token is: "+userToken);
             challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
             receivedChallengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
 
-            updateChallenges();
+            /*Idea here is to read from database */
+            Cursor c=db.rawQuery("select * from "+ChallengeFriendContract.Challenges.TABLE_NAME,null);
+            if(c.moveToFirst()) {
+                System.out.println("Database Already Present");
+                challengeAdapter.clear();
+                do {
+                    String challengeId = c.getString(0);
+                    String challengeTitle = c.getString(1);
+                    String challengeDescription = c.getString(2);
+                    Challenge challenge = new Challenge();
+                    challenge.setId(challengeId);
+                    challenge.setTitle(challengeTitle);
+                    challenge.setDescription(challengeDescription);
+                    challengeAdapter.add(challenge);
+                } while (c.moveToNext());
 
+                Cursor c2=db.rawQuery("select * from "+ChallengeFriendContract.ReceivedChallenges.TABLE_NAME,null);
+                if(c.moveToFirst()) {
+                    receivedChallengeAdapter.clear();
+                    do {
+                        String challengeId = c.getString(0);
+                        String challengeTitle = c.getString(1);
+                        String challengeDescription = c.getString(2);
+                        Challenge challenge = new Challenge();
+                        challenge.setId(challengeId);
+                        challenge.setTitle(challengeTitle);
+                        challenge.setDescription(challengeDescription);
+                        receivedChallengeAdapter.add(challenge);
+                    } while (c.moveToNext());
+                }
+
+                /*render the view by reading from database*/
+
+
+            }else {
+                System.out.println("There is no database");
+                updateChallenges();
+            }
             pager = (ViewPager) rootView.findViewById(R.id.viewpager_main);
             pager.setAdapter(new MyPagerAdapter(getActivity().getSupportFragmentManager()));
         }
@@ -157,7 +203,6 @@ public class MainActivityFragment extends Fragment {
         public SubFragment(){}
 
         public void setContext(Context context) {this.context = context;}
-
         public void setPosition(int position) {
             this.position = position;
         }
@@ -219,6 +264,7 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Object[] result) {
+
             List<Challenge> challenges;
             List<Challenge> receivedChallenges;
             if(result[0] != null) {
@@ -227,6 +273,14 @@ public class MainActivityFragment extends Fragment {
                 for(Challenge c: challenges) {
                     System.out.println("Challenge:"+c.getTitle());
                     challengeAdapter.add(c);
+                    /*Creating the values for database*/
+                    ContentValues challenge=new ContentValues();
+                    challenge.put(ChallengeFriendContract.Challenges.COLUMN_CHALLENGE_ID,c.getId());
+                    challenge.put(ChallengeFriendContract.Challenges.COLUMN_CHALLENGE_TITLE,c.getTitle());
+                    challenge.put(ChallengeFriendContract.Challenges.COLUMN_CHALLENGE_DESCRIPTION,c.getDescription());
+                    /*Putting the values in the sqlLite Database*/
+                    long rowId=db.insert(ChallengeFriendContract.Challenges.TABLE_NAME,null,challenge);
+                    Log.v("Insertion success",String.valueOf(rowId));
                 }
             }
             if(result[1] != null){
@@ -234,7 +288,20 @@ public class MainActivityFragment extends Fragment {
                 receivedChallengeAdapter.clear();
                 for(Challenge c: receivedChallenges) {
                     receivedChallengeAdapter.add(c);
+
+
+                    /*Creating the values for database*/
+                    ContentValues receivedChallenge=new ContentValues();
+                    receivedChallenge.put(ChallengeFriendContract.ReceivedChallenges.COLUMN_CHALLENGE_ID,c.getId());
+                    receivedChallenge.put(ChallengeFriendContract.ReceivedChallenges.COLUMN_CHALLENGE_TITLE,c.getTitle());
+                    receivedChallenge.put(ChallengeFriendContract.ReceivedChallenges.COLUMN_CHALLENGE_DESCRIPTION,c.getDescription());
+
+                    /*Putting the values in the sqlLite Database*/
+                    long rowId=db.insert(ChallengeFriendContract.ReceivedChallenges.TABLE_NAME,null,receivedChallenge);
+                    Log.v("Insertion success",String.valueOf(rowId));
                 }
+
+
             }
         }
     }

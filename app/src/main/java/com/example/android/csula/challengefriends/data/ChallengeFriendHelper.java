@@ -11,7 +11,7 @@ import android.util.Log;
 public class ChallengeFriendHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
 
-    static final String DATABASE_NAME = "challenge_friends.db";
+    public static final String DATABASE_NAME = "challenge_friends.db";
     public ChallengeFriendHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
