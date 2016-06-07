@@ -86,8 +86,8 @@ public class MainActivityFragment extends Fragment {
             /* redirect user to login */
             startLoginActivity();
         }else {
-            challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
-            receivedChallengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_challenge_item, new ArrayList<Challenge>());
+            challengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_item, new ArrayList<Challenge>());
+            receivedChallengeAdapter = new ChallengeAdapter(getActivity(), R.id.textview_item, new ArrayList<Challenge>());
 
             updateChallenges();
 
@@ -245,10 +245,10 @@ public class MainActivityFragment extends Fragment {
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
                 convertView = LayoutInflater.from(this.getContext())
-                        .inflate(R.layout.listview_item_contact, parent, false);
+                        .inflate(R.layout.listview_item, parent, false);
 
                 viewHolder = new ViewHolder();
-                viewHolder.itemView = (TextView) convertView.findViewById(R.id.textview_contact_item);
+                viewHolder.itemView = (TextView) convertView.findViewById(R.id.textview_item);
 
                 convertView.setTag(viewHolder);
             } else {
