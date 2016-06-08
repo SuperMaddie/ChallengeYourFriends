@@ -182,6 +182,37 @@ public class ContactActivityFragment extends Fragment {
             /* ...should prompt for confirmation (add later)...*/
             /* add challenge id to senders list */
 
+
+           /* --------------------------**-----------------------------*/
+            MyProfile sendersProfile;
+            try {
+              sendersProfile = DynamoDbUtils.loadProfile
+                        (DynamoDbUtils.init(context), PreferenceUtils.getCurrentUser(context).getCognitoId());
+
+                Set set = new HashSet(sendersProfile.getSentChallengesList());
+                set.add(challenge.getId());
+                List list = new ArrayList(set);
+                sendersProfile.setSentChallengesList(list);
+                DynamoDbUtils.saveProfile(DynamoDbUtils.init(context), sendersProfile);
+            }catch(Exception e) {
+                Log.e("Profile load exception", e.getMessage());
+            }
+
+            /* add challenge id to receivers list */
+            MyProfile receiversProfile = DynamoDbUtils.loadProfileByFacebookId(DynamoDbUtils.init(context), user.getFacebookId());
+            try {
+                Set set = new HashSet(receiversProfile.getReceivedChallengesList());
+                set.add(challenge.getId());
+                List list = new ArrayList(set);
+                receiversProfile.setReceivedChallengesList(list);
+
+                DynamoDbUtils.saveProfile(DynamoDbUtils.init(context), receiversProfile);
+            }catch(Exception e){
+                Log.e("Profile Load Exception", e.getMessage());
+            }
+
+            /*--------------------------------------------------------------------------*/
+
             /*make a post request to GCM */
 
 
@@ -189,11 +220,13 @@ public class ContactActivityFragment extends Fragment {
             JSONObject obj1=new JSONObject();
             JSONObject obj2=new JSONObject();
             try {
-                obj2.put("title","savin");
-                obj2.put("text","Hello Savin Sachdev");
+                obj2.put("title",challenge.getTitle());
+                obj2.put("text",challenge.getDescription());
                 obj1.put("notification",obj2);
-                obj1.put("message","Hi");
-                obj1.put("to","frtraLWb1S4:APA91bFq9BnoC5Ah_8g25rccfrsccZwSPN0ygBWSnTpPNCIdmMxdBg1henUijRxkm4kSGLeZt4g7yP9-nOqGwTmjzDkza-U0nvqp6VD9rgZTwUWEQZi632Qu2hKvugVbtY3seD2sJeVT");
+                obj1.put("challenge",challenge.getId());
+                obj1.put("sender",user.getName());
+
+                obj1.put("to",user.getGCMId());
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -207,6 +240,7 @@ public class ContactActivityFragment extends Fragment {
                 urlConnection = (HttpURLConnection) ((new URL("https://gcm-http.googleapis.com/gcm/send").openConnection()));
                 urlConnection.setDoOutput(true);
                 urlConnection.setRequestProperty("Content-Type", "application/json");
+                /*Replace the key later it's not secure*/
                 urlConnection.setRequestProperty("Authorization","key=AIzaSyB7fHG3C1WF3zM0F0ehzghbF2ULX0vaF7k");
                 urlConnection.setRequestProperty("Accept", "application/json");
                 urlConnection.setRequestMethod("POST");
@@ -241,32 +275,6 @@ public class ContactActivityFragment extends Fragment {
 
 
 
-           /* --------------------------**-----------------------------*/
-            try {
-                MyProfile sendersProfile = DynamoDbUtils.loadProfile
-                        (DynamoDbUtils.init(context), PreferenceUtils.getCurrentUser(context).getCognitoId());
-
-                Set set = new HashSet(sendersProfile.getSentChallengesList());
-                set.add(challenge.getId());
-                List list = new ArrayList(set);
-                sendersProfile.setSentChallengesList(list);
-                DynamoDbUtils.saveProfile(DynamoDbUtils.init(context), sendersProfile);
-            }catch(Exception e) {
-                Log.e("Profile load exception", e.getMessage());
-            }
-
-            /* add challenge id to receivers list */
-            MyProfile receiversProfile = DynamoDbUtils.loadProfileByFacebookId(DynamoDbUtils.init(context), user.getFacebookId());
-            try {
-                Set set = new HashSet(receiversProfile.getReceivedChallengesList());
-                set.add(challenge.getId());
-                List list = new ArrayList(set);
-                receiversProfile.setReceivedChallengesList(list);
-
-                DynamoDbUtils.saveProfile(DynamoDbUtils.init(context), receiversProfile);
-            }catch(Exception e){
-                Log.e("Profile Load Exception", e.getMessage());
-            }
 
             return null;
         }

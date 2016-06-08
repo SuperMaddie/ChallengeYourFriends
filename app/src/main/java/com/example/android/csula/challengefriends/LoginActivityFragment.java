@@ -216,10 +216,14 @@ public class LoginActivityFragment extends Fragment {
 
             MyProfile profile = DynamoDbUtils.loadProfile(credentialsProvider, currentUser.getCognitoId());
 
-            /* if user's profile does not exist in db save it */
+            /*Currently comment it out so that we can save gcm id in dababase*/
+           /* *//* if user's profile does not exist in db save it *//*
             if(profile == null) {
                 profile = DynamoDbUtils.saveProfile(credentialsProvider, currentUser);
-            }
+            }*/
+
+            profile = DynamoDbUtils.saveProfile(credentialsProvider, currentUser);
+
 
             /*CognitoSyncManager syncClient = new CognitoSyncManager(
                     getContext(),
