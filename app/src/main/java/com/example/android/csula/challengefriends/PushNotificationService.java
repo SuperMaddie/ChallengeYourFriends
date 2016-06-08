@@ -41,8 +41,8 @@ public class PushNotificationService extends GcmListenerService {
        /*Update the database table received entry*/
         ContentValues receivedChallenge=new ContentValues();
         receivedChallenge.put(ChallengeFriendContract.ReceivedChallenges.COLUMN_CHALLENGE_ID,id);
-        receivedChallenge.put(ChallengeFriendContract.ReceivedChallenges.COLUMN_CHALLENGE_TITLE,title);
-        receivedChallenge.put(ChallengeFriendContract.ReceivedChallenges.COLUMN_CHALLENGE_DESCRIPTION,description);
+        receivedChallenge.put(ChallengeFriendContract.ReceivedChallenges.COLUMN_CHALLENGE_TITLE,title+" edited");
+        receivedChallenge.put(ChallengeFriendContract.ReceivedChallenges.COLUMN_CHALLENGE_DESCRIPTION,description+" edited");
 
         /*Putting the values in the sqlLite Database*/
         ChallengeFriendHelper dbHelper = new ChallengeFriendHelper(getBaseContext());

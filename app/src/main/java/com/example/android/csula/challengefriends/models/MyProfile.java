@@ -14,7 +14,7 @@ import java.util.List;
 
 @DynamoDBTable(tableName = "profiles")
 public class MyProfile implements Serializable{
-
+    private String GCMID;
     private String cognitoId;
     private String facebookId;
     private List<String> receivedChallengesList;
@@ -23,11 +23,13 @@ public class MyProfile implements Serializable{
     public MyProfile(){
     }
 
-    public MyProfile(String cognitoId, String facebookId){
+    public MyProfile(String cognitoId, String facebookId, String GCMID){
+        this.GCMID=GCMID;
         this.cognitoId = cognitoId;
         this.facebookId = facebookId;
         receivedChallengesList = new ArrayList<>();
         sentChallengesList = new ArrayList<>();
+
     }
 
     @DynamoDBHashKey(attributeName = "userId")
@@ -55,8 +57,19 @@ public class MyProfile implements Serializable{
         return receivedChallengesList;
     }
 
+
+
     public void setReceivedChallengesList(List<String> receivedChallengesList) {
         this.receivedChallengesList = receivedChallengesList;
+    }
+
+    @DynamoDBAttribute(attributeName = "GCMID")
+    public String getGCMID() {
+        return GCMID;
+    }
+
+    public void setGCMID(String GCMID){
+        this.GCMID=GCMID;
     }
 
     @DynamoDBAttribute(attributeName = "sentChallengesList")

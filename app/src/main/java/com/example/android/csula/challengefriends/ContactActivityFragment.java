@@ -184,7 +184,7 @@ public class ContactActivityFragment extends Fragment {
 
 
            /* --------------------------**-----------------------------*/
-            MyProfile sendersProfile;
+            MyProfile sendersProfile=null;
             try {
               sendersProfile = DynamoDbUtils.loadProfile
                         (DynamoDbUtils.init(context), PreferenceUtils.getCurrentUser(context).getCognitoId());
@@ -208,7 +208,7 @@ public class ContactActivityFragment extends Fragment {
 
                 DynamoDbUtils.saveProfile(DynamoDbUtils.init(context), receiversProfile);
             }catch(Exception e){
-                Log.e("Profile Load Exception", e.getMessage());
+                Log.e("Profile Load Exception","Error");
             }
 
             /*--------------------------------------------------------------------------*/
@@ -224,9 +224,8 @@ public class ContactActivityFragment extends Fragment {
                 obj2.put("text",challenge.getDescription());
                 obj1.put("notification",obj2);
                 obj1.put("challenge",challenge.getId());
-                obj1.put("sender",user.getName());
-
-                obj1.put("to",user.getGCMId());
+                obj1.put("sender",PreferenceUtils.getCurrentUser(context).getName());
+                obj1.put("to",receiversProfile.getGCMID());
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -252,8 +251,6 @@ public class ContactActivityFragment extends Fragment {
                 writer.write(data);
                 writer.close();
                 outputStream.close();
-
-                //Read
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), "UTF-8"));
 
                 String line = null;
@@ -271,7 +268,7 @@ public class ContactActivityFragment extends Fragment {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println("Output is:"+result);
+            System.out.println("Output is:"+data);
 
 
 

@@ -92,6 +92,9 @@ public class LoginActivityFragment extends Fragment {
         context = getActivity();
         currentUser = new User();
 
+       PreferenceUtils.clearCurrentUser(context);
+
+
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions(Arrays.asList("user_friends"));
@@ -102,7 +105,7 @@ public class LoginActivityFragment extends Fragment {
             public void onSuccess(LoginResult loginResult) {
                 // regiter the user in GCM if not already exists
 
-                System.out.println("Registration Successful putting entry in GCM");
+
 
                 GCMClientManager pushClientManager = new GCMClientManager(getActivity(), "513690848871");
                 pushClientManager.registerIfNeeded(new GCMClientManager.RegistrationCompletedHandler() {
@@ -213,7 +216,7 @@ public class LoginActivityFragment extends Fragment {
             //attributeValue.setS(((TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE)).getLine1Number().toString());
             attributeValue.setS(currentUser.getFacebookId());
             info.put("facebook_id", attributeValue);*/
-
+            currentUser.getGCMId();
             MyProfile profile = DynamoDbUtils.loadProfile(credentialsProvider, currentUser.getCognitoId());
 
             /*Currently comment it out so that we can save gcm id in dababase*/

@@ -83,7 +83,7 @@ public class DynamoDbUtils {
     }
 
     public static MyProfile saveProfile(CognitoCachingCredentialsProvider credentialsProvider, User currentUser) {
-        MyProfile profile = new MyProfile(currentUser.getCognitoId(), currentUser.getFacebookId());
+        MyProfile profile = new MyProfile(currentUser.getCognitoId(), currentUser.getFacebookId(),currentUser.getGCMId());
         AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
         DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
         mapper.save(profile);

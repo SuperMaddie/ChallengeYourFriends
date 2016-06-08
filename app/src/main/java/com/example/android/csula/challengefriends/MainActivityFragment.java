@@ -92,7 +92,16 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+
+
         context = getActivity();
+         /*delete this later*/
+
+        /*-------------------------------------------------*/
+      /* context.deleteDatabase(ChallengeFriendHelper.DATABASE_NAME);
+        logout();*/
+
+        /*----------------------------------------*/
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
         final String userToken = PreferenceUtils.getSharedValues(getString(R.string.user_token_key), getActivity());
 
