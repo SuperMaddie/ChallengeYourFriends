@@ -16,17 +16,23 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="68dp" />
+        android:layout_marginTop="40dp"
+        android:background="@color/colorListView"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Select friends you want to sent the challenge to."
+        android:text="Select Friend"
+        android:gravity="center"
         android:id="@+id/textview_contact_header"
         android:linksClickable="false"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="25dp"
+        android:background="@color/colorPagerTitleStrip"/>
+    />
 
 </RelativeLayout>

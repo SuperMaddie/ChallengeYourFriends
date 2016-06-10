@@ -5,8 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -53,12 +57,37 @@ public class ContactActivityFragment extends Fragment {
 
     public ContactActivityFragment() {
     }
+    //menu
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_contact, menu);
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id == R.id.action_logout){
+            logout();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    public void logout() {
+        /* remove user's token */
+        PreferenceUtils.clearUserToken(getActivity());
+        /* remove current user */
+        PreferenceUtils.clearCurrentUser(getActivity());
 
-
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        startActivity(intent);
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         context = getActivity();
 
         Intent intent = getActivity().getIntent();
