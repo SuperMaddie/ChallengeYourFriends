@@ -13,18 +13,20 @@ import java.util.List;
  */
 
 @DynamoDBTable(tableName = "profiles")
-public class MyProfile implements Serializable{
+public class MyProfile implements Serializable {
     private String GCMID;
     private String cognitoId;
     private String facebookId;
+    private String name;
     private List<String> receivedChallengesList;
     private List<String> sentChallengesList;
 
-    public MyProfile(){
+    public MyProfile() {
     }
 
-    public MyProfile(String cognitoId, String facebookId, String GCMID){
-        this.GCMID=GCMID;
+    public MyProfile(String name, String cognitoId, String facebookId, String GCMID) {
+        this.name = name;
+        this.GCMID = GCMID;
         this.cognitoId = cognitoId;
         this.facebookId = facebookId;
         receivedChallengesList = new ArrayList<>();
@@ -41,9 +43,16 @@ public class MyProfile implements Serializable{
         this.cognitoId = cognitoId;
     }
 
+    @DynamoDBAttribute(attributeName = "name")
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @DynamoDBAttribute(attributeName = "facebookId")
-    /*@DynamoDBIndexRangeKey(attributeName="facebookId",
-            localSecondaryIndexName="facebookIdIndex")*/
     public String getFacebookId() {
         return facebookId;
     }
@@ -57,8 +66,6 @@ public class MyProfile implements Serializable{
         return receivedChallengesList;
     }
 
-
-
     public void setReceivedChallengesList(List<String> receivedChallengesList) {
         this.receivedChallengesList = receivedChallengesList;
     }
@@ -68,8 +75,8 @@ public class MyProfile implements Serializable{
         return GCMID;
     }
 
-    public void setGCMID(String GCMID){
-        this.GCMID=GCMID;
+    public void setGCMID(String GCMID) {
+        this.GCMID = GCMID;
     }
 
     @DynamoDBAttribute(attributeName = "sentChallengesList")

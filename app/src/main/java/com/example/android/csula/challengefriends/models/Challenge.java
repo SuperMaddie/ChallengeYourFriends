@@ -14,6 +14,19 @@ public class Challenge implements Serializable{
     private String id;
     private String title;
     private String description;
+    private String senderName;
+    private String senderId;
+
+    public Challenge(){}
+
+    public Challenge(String id, String title, String description, String senderName, String senderId) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.senderName = senderName;
+        this.senderId = senderId;
+    }
+
 
     @DynamoDBHashKey(attributeName = "id")
     public String getId() {
@@ -42,8 +55,25 @@ public class Challenge implements Serializable{
         this.description = description;
     }
 
+    @DynamoDBAttribute(attributeName = "senderName")
+    public String getSenderName() { return senderName; }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    @DynamoDBAttribute(attributeName = "senderId")
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
+    }
+
     @Override
     public String toString() {
-        return title + " " + description;
+        String sender = (senderName == null || senderName.isEmpty()) ? ""  : senderName + ": ";
+        return sender + title + " " + description;
     }
 }

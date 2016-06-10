@@ -10,7 +10,9 @@ import com.example.android.csula.challengefriends.R;
 import com.example.android.csula.challengefriends.models.User;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Mahdiye on 5/18/2016.
@@ -63,14 +65,18 @@ public class PreferenceUtils {
         setSharedValues(context.getString(R.string.friends_prefs_key), json, context);
     }
 
-    public static List<User> getFriends(Context context){
+    public static Map<String, User> getFriends(Context context){
         Gson gson = new Gson();
         String json = getSharedValues(context.getString(R.string.friends_prefs_key), context);
 
+        Map<String, User> result = new HashMap<>();
+
         Type type = new TypeToken<List<User>>(){}.getType();
         List<User> friends = gson.fromJson(json, type);
-
-        return friends;
+        for(User f : friends){
+            result.put(f.getFacebookId(), f);
+        }
+        return result;
     }
 
 

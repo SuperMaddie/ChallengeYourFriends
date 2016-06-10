@@ -83,7 +83,7 @@ public class DynamoDbUtils {
     }
 
     public static MyProfile saveProfile(CognitoCachingCredentialsProvider credentialsProvider, User currentUser) {
-        MyProfile profile = new MyProfile(currentUser.getCognitoId(), currentUser.getFacebookId(),currentUser.getGCMId());
+        MyProfile profile = new MyProfile(currentUser.getName(), currentUser.getCognitoId(), currentUser.getFacebookId(), currentUser.getGCMId());
         AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
         DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
         mapper.save(profile);
@@ -118,13 +118,39 @@ public class DynamoDbUtils {
 
         MyProfile profile = loadProfile(credentialsProvider, currentUser.getCognitoId());
 
-        List<String> challengesIds = profile.getReceivedChallengesList();
+        List<String> receivedChallenges = profile.getReceivedChallengesList();
+
+        List<String> challengesIds = new ArrayList<>();
+        List<String> sendersNames = new ArrayList<>();
+        List<String> sendersIds = new ArrayList<>();
+        for(String s : receivedChallenges) {
+            String senderFacebookId = s.split(" ")[0];
+            sendersIds.add(senderFacebookId);
+
+            MyProfile senderProfile = loadProfileByFacebookId(credentialsProvider, senderFacebookId);
+            sendersNames.add(senderProfile.getName());
+
+            String challengeId = s.split(" ")[1];
+            challengesIds.add(challengeId);
+        }
+
         List<Challenge> result = new ArrayList<>();
         List<Challenge> challenges = getChallenges(credentialsProvider);
 
+        /* look up in received challenges in dynamo db, add sender name to the relative challenge and return them */
         for(Challenge c : challenges){
-            if(challengesIds.contains(c.getId())) {
-                result.add(c);
+            for(int i = 0; i<challengesIds.size(); i++) {
+                if(challengesIds.get(i).equals(c.getId())) {
+                    Challenge challenge = new Challenge(
+                            c.getId(),
+                            c.getTitle(),
+                            c.getDescription(),
+                            sendersNames.get(i),
+                            sendersIds.get(i)
+                    );
+                    result.add(challenge);
+                    break;
+                }
             }
         }
 

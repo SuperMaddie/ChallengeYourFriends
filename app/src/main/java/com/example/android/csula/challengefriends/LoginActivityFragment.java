@@ -44,12 +44,19 @@ public class LoginActivityFragment extends Fragment {
     private CallbackManager callbackManager;
     private AccessTokenTracker tokenTracker;
     private ProfileTracker profileTracker;
-    private Context context;
     private User currentUser;
     private AccessToken accessToken;
     private String GcmId;
 
+    private Context context;
+
     public LoginActivityFragment() {
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        context = getActivity();
     }
 
     @Override
@@ -60,6 +67,8 @@ public class LoginActivityFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        context = getActivity();
 
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
         callbackManager = CallbackManager.Factory.create();
@@ -92,8 +101,10 @@ public class LoginActivityFragment extends Fragment {
         context = getActivity();
         currentUser = new User();
 
-       PreferenceUtils.clearCurrentUser(context);
-
+        /* remove user's token */
+        PreferenceUtils.clearUserToken(getActivity());
+        /* remove current user */
+        PreferenceUtils.clearCurrentUser(getActivity());
 
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
@@ -103,17 +114,14 @@ public class LoginActivityFragment extends Fragment {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                // regiter the user in GCM if not already exists
-
-
+                // register the user in GCM if not already exists
 
                 GCMClientManager pushClientManager = new GCMClientManager(getActivity(), "513690848871");
                 pushClientManager.registerIfNeeded(new GCMClientManager.RegistrationCompletedHandler() {
-
                     @Override
                     public void onSuccess(String registrationId, boolean isNewRegistration) {
-                        GcmId=registrationId;
-                        Log.d("Registration id",registrationId);
+                        GcmId = registrationId;
+                        Log.d("Registration id", registrationId);
                         //send this registrationId to your server
                     }
                     @Override
@@ -144,7 +152,7 @@ public class LoginActivityFragment extends Fragment {
                 ).executeAsync();
 
                 /* go back to main activity */
-               startMainActivity();
+                startMainActivity();
             }
 
             @Override
@@ -156,12 +164,10 @@ public class LoginActivityFragment extends Fragment {
             }
         });
 
-
-
         return view;
     }
 
-    public void startMainActivity(){
+    public void startMainActivity() {
         Intent intent = new Intent(getActivity(), MainActivity.class);
         startActivity(intent);
         getActivity().finish();
@@ -183,8 +189,7 @@ public class LoginActivityFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
 
-            CognitoCachingCredentialsProvider credentialsProvider = DynamoDbUtils.init(getContext());
-            System.out.println("Token inside AWS :"+accessToken);
+            CognitoCachingCredentialsProvider credentialsProvider = DynamoDbUtils.init(context);
             /* set current user in preferences */
             new GraphRequest(
                     accessToken,
@@ -197,7 +202,6 @@ public class LoginActivityFragment extends Fragment {
                             User user = JsonUtils.getUserInfo(response.getRawResponse());
                             currentUser.setName(user.getName());
                             currentUser.setFacebookId(user.getFacebookId());
-
                         }
                     }
             ).executeAndWait();
@@ -207,41 +211,13 @@ public class LoginActivityFragment extends Fragment {
 
             PreferenceUtils.setCurrentUser(currentUser, context);
 
-            /* add user info to dynamoDB profiles table */
-            /*Map<String, AttributeValue> info = new HashMap<>();
-            AttributeValue attributeValue = new AttributeValue();
-            attributeValue.setS(currentUser.getCognitoId());
-            info.put("userId", attributeValue);
-            attributeValue = new AttributeValue();
-            //attributeValue.setS(((TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE)).getLine1Number().toString());
-            attributeValue.setS(currentUser.getFacebookId());
-            info.put("facebook_id", attributeValue);*/
             currentUser.getGCMId();
             MyProfile profile = DynamoDbUtils.loadProfile(credentialsProvider, currentUser.getCognitoId());
 
-            /*Currently comment it out so that we can save gcm id in dababase*/
-           /* *//* if user's profile does not exist in db save it *//*
-            if(profile == null) {
+            /* if user's profile does not exist in db save it */
+            if (profile == null) {
                 profile = DynamoDbUtils.saveProfile(credentialsProvider, currentUser);
-            }*/
-
-            profile = DynamoDbUtils.saveProfile(credentialsProvider, currentUser);
-
-
-            /*CognitoSyncManager syncClient = new CognitoSyncManager(
-                    getContext(),
-                    Regions.US_EAST_1, // Region
-                    credentialsProvider);*/
-
-            // Create a record in a dataset and synchronize with the server
-            /*Dataset dataset = syncClient.openOrCreateDataset("myDataset");
-            dataset.put("myKey", "myValue");
-            dataset.synchronize(new DefaultSyncCallback() {
-                @Override
-                public void onSuccess(Dataset dataset, List newRecords) {
-                    Log.e("dataset", dataset.get("myKey"));
-                }
-            });*/
+            }
 
             String fbToken = PreferenceUtils.getSharedValues(context.getString(R.string.user_token_key), context);
 

@@ -68,6 +68,15 @@
                 android:value="com.example.android.csula.challengefriends.MainActivity" />
         </activity>
 
+        <activity
+            android:name=".ShareActivity"
+            android:label="Share"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.csula.challengefriends.MainActivity" />
+        </activity>
+
 
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
