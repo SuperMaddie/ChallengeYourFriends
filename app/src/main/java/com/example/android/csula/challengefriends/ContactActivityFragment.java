@@ -105,7 +105,7 @@ public class ContactActivityFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 /* save the challenge id in receivers received challenges and senders sent challenges */
                 user = (User) parent.getItemAtPosition(position);
-                Toast.makeText(context, user.getName() + ":" + challenge.getId(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, challenge.getTitle() + " to " + user.getName(), Toast.LENGTH_SHORT).show();
                 /*Save the challenges id in the dynamo db and send the challenge to the another user using gcm */
 
                 AWSTask task = new AWSTask();
