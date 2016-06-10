@@ -280,7 +280,10 @@ public class MainActivityFragment extends Fragment {
                         /* if clicked on received challenge open video sharing */
                         case 1:
                             Intent intent2 = new Intent(context, ShareActivity.class);
+                            intent2.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                            intent2.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                             startActivity(intent2);
+
                             break;
                     }
                 }
