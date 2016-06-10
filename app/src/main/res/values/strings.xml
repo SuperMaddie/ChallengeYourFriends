@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AndroidShare</string>
+    <string name="facebook_app_id">257771987914960</string>
+    <string name="share">Share</string>
+</resources>
