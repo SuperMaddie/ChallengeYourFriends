@@ -6,17 +6,13 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 
-import com.facebook.CallbackManager;
 import com.facebook.FacebookSdk;
-import com.facebook.login.LoginManager;
 
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_TAKE_GALLERY_VIDEO = 1;
-    private CallbackManager callbackManager;
-    private LoginManager manager;
+    public int REQUEST_TAKE_GALLERY_VIDEO = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,4 +27,16 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(i, REQUEST_TAKE_GALLERY_VIDEO);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(resultCode == RESULT_OK){
+            if(requestCode == REQUEST_TAKE_GALLERY_VIDEO) {
+                Intent share = new Intent(Intent.ACTION_SEND);
+                share.setType("video/*");
+                Uri uri = data.getData();
+                share.putExtra(Intent.EXTRA_STREAM, uri);
+                startActivity(Intent.createChooser(share, "Share Video on"));
+            }
+        }
+    }
 }
